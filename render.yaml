@@ -1,0 +1,24 @@
+services:
+  # Python ML API (Docker)
+  - type: web
+    name: movie-ml-api
+    env: docker
+    dockerfilePath: docker/ml.Dockerfile
+    plan: free
+
+  # Node.js Backend
+  - type: web
+    name: movie-node-backend
+    env: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGO_URI
+        sync: false # Render will prompt you for this value when deploying
+      - key: ML_API_URL
+        fromService:
+          type: web
+          name: movie-ml-api
+          envVarKey: RENDER_EXTERNAL_URL
