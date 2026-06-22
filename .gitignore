@@ -19,11 +19,10 @@ ENV/
 .env.test.local
 .env.production.local
 
-# ML Models & Data
+# ML Models
 ml/models/*.pkl
 ml/models/*.h5
 ml/models/*.joblib
-ml/data/*.csv
 
 # OS
 .DS_Store
