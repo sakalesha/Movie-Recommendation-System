@@ -1,0 +1,378 @@
+--- ml/notebooks\Exploratory Data Analysis.ipynb ---
+<h1><center>Movie Recommendation System - Exploratory  Data Analysis</center></h1>
+#### Life cycle of Machine learning Project
+
+- Understanding the Problem Statement
+- Data Collection
+- Data Checks to perform
+- Exploratory data analysis
+- Data Pre-Processing
+- Cosine Similarity Calculation
+- Ranking and Recommendations
+- Deployment
+
+<p> We Will Perform upto Exploratory Data Analysis in this Notebook <p>
+### 1) Problem statement
+- This project Creates a content-based movie recommendation system using cosine similarity to address the challenge of personalizing movie recommendations based on user preferences and rich movie attributes.
+
+
+### 2) Data Collection
+# 2.1 Import Data and Required Packages
+####  Importing Pandas, Numpy, Matplotlib, Seaborn and Warings Library.
+import warnings
+warnings.filterwarnings('ignore')
+
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+### Import the CSV Data as Pandas DataFrame
+df = pd.read_csv('../data/main_data.csv')
+df.head()
+### Shape of the Dataset
+df.shape
+# 2.2 Dataset Information
+- Director_Name    :Movie director's name
+- Actor_1_Name     : Primary lead actor/actress
+- Actor_2_Name     : Secondary lead actor/actress
+- Actor_3_Name     : Tertiary actor/actress
+- Genres           : Movie's thematic categories
+- Movie_Title      : Title of the movie
+- Combined_Feature : Aggregate representation for recommendation
+### 3). Data Checks to perform
+
+- Checking Missing values
+- Checking Duplicates
+- Checking data type
+- Checking the number of unique values of each column
+- Checking statistics of data set
+- Checking Categorical and Numerical Attributes
+- Checking various categories present in the different categorical column
+### 3.1 Check Missing values
+df.isnull().sum()
+## Insights:
+
+- There are no Missing Values in the dataset
+### 3.2 Check Duplicates
+df.duplicated().sum()
+## Insights:
+
+- There are no duplicates  values in the data set
+### 3.3 Check data types
+df.info()
+## Insights:
+
+- All Features are in Object Datatype
+### 3.4 Checking the number of unique values of each column
+df.nunique()
+## Insights:
+
+- All Features are having Number of Classes
+### 3.5 Checking statistics of data set
+df.describe()
+### 3.5 Categorical and Numerical Attributes
+numeric_features = [feature for feature in df.columns if df[feature].dtype != 'O']
+categorical_features = [feature for feature in df.columns if df[feature].dtype == 'O']
+
+print('We have {} numerical features : {}'.format(len(numeric_features), numeric_features))
+print('\nWe have {} categorical features : {}'.format(len(categorical_features), categorical_features))
+## Insights:
+
+- All are Categorical Features (No Numerical Attributes)
+### 3.6 Checking Various Categories Present in the Different Categorical Column
+print("Categories in Directors:     ",end=" " )
+print(df['director_name'].unique())
+
+print("\nCategories in Actor 1:  ",end=" ")
+print(df['actor_1_name'].unique())
+
+print("\nCategories in'Actor 2:",end=" " )
+print(df['actor_2_name'].unique())
+
+print("\nCategories in Actor 3:     ",end=" " )
+print(df['actor_3_name'].unique())
+
+print("\nCategories in Genres:     ",end=" " )
+print(df['genres'].unique())
+## Insights:
+
+- There are Alot of Classes in each Feature
+### 4). Exploratory Data Analysis ( Visualization )
+## 4.1 Genre Distribution
+genre_df = df['genres'].str.split(' ', expand=True).stack().reset_index(level=1, drop=True).rename('genre')
+genre_counts = genre_df.value_counts().tolist()
+unique_genres = genre_df.unique().tolist()
+plt.figure(figsize=(12, 7))
+plt.barh(unique_genres, genre_counts)
+plt.xlabel('Number of Movies')
+plt.ylabel('Genre')
+plt.title('Count of Movies per Genre')
+plt.gca().invert_yaxis() 
+plt.show()
+## Insights:
+
+- <h3>Most Frequent Genre:</h3> <br> 1. Action <br><br> 2. Adventure
+## 4.2 Top 10 Actors (Actor_1)
+top_actors = df['actor_1_name'].value_counts().head(10)
+plt.figure(figsize=(12, 6))
+sns.barplot(x=top_actors.values, y=top_actors.index)
+plt.title('Top 10 Actors with the Most Movies')
+plt.xlabel('Number of Movies')
+plt.show()
+## Insights:
+
+- Top 1 Actor: Robert De Niro
+    
+## 4.3 Top 10 Genres
+top_categories = df['genres'].value_counts().head(10)
+plt.figure(figsize=(12, 6))
+sns.barplot(x=top_categories.index, y=top_categories.values)
+plt.xticks(rotation=45)
+plt.xlabel('Category')
+plt.ylabel('Count')
+plt.title(f'Top {10} Categories')
+plt.show()
+## Insights: 
+
+
+- Drama Alone is Most Frequent Genre    
+## 4.4 Top Directors 
+filtered_df = df[df['director_name'] != 'unknown']
+top_directors = filtered_df['director_name'].value_counts().head(10)
+plt.figure(figsize=(12, 6))
+sns.barplot(x=top_directors.values, y=top_directors.index)
+plt.xlabel('Number of Movies')
+plt.ylabel('Director Name')
+plt.title(f'Top {10} Directors with the Most Movies (Excluding Unknown)')
+plt.show()
+## Insights:
+
+- Steven Speilberg, The Director With most Movies
+## 4.5 Movie Titles Word Cloud - Word Cloud
+from wordcloud import WordCloud
+
+wordcloud_text = ' '.join(df['movie_title'])
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate(wordcloud_text)
+
+plt.figure(figsize=(10, 5))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.title('Movie Title Word Cloud')
+plt.show()
+## Insights:
+
+- Most Frequently Used Words: Love, Last, Man, Day
+## 4.6 Distribution of Categorical and Numerical Features
+num_numerical_columns = len(numeric_features)
+num_categorical_columns = len(categorical_features)
+
+labels = ['Numerical Columns', 'Categorical Columns']
+sizes = [num_numerical_columns, num_categorical_columns]
+colors = ['lightblue', 'lightcoral']
+explode = (0.1, 0)
+plt.figure(figsize=(8, 8))
+plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140)
+plt.title('Proportion of Numerical and Categorical Columns')
+plt.show()
+## Insights:
+
+- All are Categorical Attributes Only
+## 4.7 Director-Actor Collaborations by Number of Movies
+df['director_actor_collaboration'] = df['director_name'] + ' - ' + df['actor_1_name']
+collaboration_counts = df['director_actor_collaboration'].value_counts()
+top_10_collaborations = collaboration_counts.head(10)
+plt.figure(figsize=(12, 6))
+sns.barplot(x=top_10_collaborations.values, y=top_10_collaborations.index)
+plt.xlabel('Number of Collaborations')
+plt.ylabel('Director - Actor Collaboration')
+plt.title('Top 10 Director-Actor Collaborations by Number of Movies')
+plt.xticks(rotation=90)
+plt.show()
+## Insights:
+
+- Most Collaborated Director and Actor: Clint EastWood
+## 4.8 Actor-Genre Relationships
+actor_columns = ['actor_1_name', 'actor_2_name', 'actor_3_name']
+df['actors'] = df[actor_columns].apply(lambda x: ', '.join(x.dropna().astype(str)), axis=1)
+
+# Split the genres and create a new DataFrame with one row per genre-actor pair
+genre_actor_df = df['genres'].str.split('|', expand=True).stack().reset_index(level=1, drop=True).rename('genre')
+genre_actor_df = pd.concat([genre_actor_df, df['actors']], axis=1)
+
+# Count the occurrences of each Actor-Genre combination
+actor_genre_counts = genre_actor_df.groupby(['actors', 'genre']).size().reset_index(name='count')
+
+# Find the top 10 actors who appeared in the most frequent genres
+top_10_actors = actor_genre_counts.groupby('actors')['count'].sum().nlargest(10).index
+
+# Create a count plot to visualize the top 10 actors who played the most frequent genres
+plt.figure(figsize=(12, 12))
+sns.barplot(x='count', y='actors', hue='genre', data=actor_genre_counts[actor_genre_counts['actors'].isin(top_10_actors)])
+plt.title('Top 10 Actors with the Most Frequent Genres')
+plt.xlabel('Frequency')
+plt.ylabel('Actor')
+plt.legend(title='Genre', title_fontsize='12', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.show()
+## Insights:
+
+
+- Most Frequent Actor-Genre Relationship: Johnny Deep, Orlando Bloom, Jack Davenport - Action Adventure Fantasy
+
+===================
+--- ml/notebooks\Movie Recommendation System.ipynb ---
+import numpy as np
+import pandas as pd
+import difflib
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+movies_data = pd.read_csv(r"../data/movies.csv")
+movies_data.head()
+movies_data.shape
+selected_features = ['genres','keywords','tagline','cast','director']
+print(selected_features)
+for feature in selected_features:
+  movies_data[feature] = movies_data[feature].fillna('')
+combined_features = movies_data['genres']+' '+movies_data['keywords']+' '+movies_data['tagline']+' '+movies_data['cast']+' '+movies_data['director']
+print(combined_features)
+vectorizer = TfidfVectorizer()
+feature_vectors = vectorizer.fit_transform(combined_features)
+print(feature_vectors)
+similarity = cosine_similarity(feature_vectors)
+print(similarity)
+print(similarity.shape)
+movie_name = input(' Enter your favourite movie name : ')
+list_of_all_titles = movies_data['title'].tolist()
+print(list_of_all_titles)
+find_close_match = difflib.get_close_matches(movie_name, list_of_all_titles)
+print(find_close_match)
+close_match = find_close_match[0]
+print(close_match)
+index_of_the_movie = movies_data[movies_data.title == close_match]['index'].values[0]
+print(index_of_the_movie)
+similarity_score = list(enumerate(similarity[index_of_the_movie]))
+print(similarity_score)
+len(similarity_score)
+sorted_similar_movies = sorted(similarity_score, key = lambda x:x[1], reverse = True)
+print(sorted_similar_movies)
+print('Movies suggested for you : \n')
+
+i = 1
+
+for movie in sorted_similar_movies:
+  index = movie[0]
+  title_from_index = movies_data[movies_data.index==index]['title'].values[0]
+  if (i<30):
+    print(i, '.',title_from_index)
+    i+=1
+import os
+import pickle
+
+model_dir = os.path.join('..', 'models')
+os.makedirs(model_dir, exist_ok=True)
+
+similarity_path = os.path.join(model_dir, 'similarity_matrix.pkl')
+with open(similarity_path, 'wb') as f:
+    pickle.dump(similarity, f)
+
+print(f"Models saved successfully in {model_dir}")
+
+
+===================
+--- ml/notebooks\Sentimental Analysis on Reviews.ipynb ---
+import nltk
+import pickle
+import numpy as np
+import pandas as pd
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+
+
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    confusion_matrix,
+)
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn import naive_bayes
+nltk.download("stopwords")
+dataset = pd.read_csv(r"../data/reviews.txt",sep = '\t', names =['Reviews','Comments'])
+dataset
+stopset = stopwords.words('english')
+vectorizer = TfidfVectorizer(use_idf = True,lowercase = True, strip_accents='ascii',stop_words=stopset)
+X = vectorizer.fit_transform(dataset.Comments)
+y = dataset.Reviews
+pickle.dump(vectorizer, open('tranform.pkl', 'wb'))
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
+models = {
+    'Random Forest': RandomForestClassifier(),
+    'Logistic Regression': LogisticRegression(),
+    'Support Vector Machine': SVC(),
+    'Multinomial Naive Bayes': naive_bayes.MultinomialNB()
+}
+evaluation_metrics = []
+def evaluate_model(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+    confusion = confusion_matrix(y_test, y_pred)
+    
+    model_metrics = {
+        'Model Name': type(model).__name__,
+        'Accuracy': accuracy,
+        'Precision': precision,
+        'Recall': recall,
+        'F1-Score': f1,
+        'Confusion Matrix': confusion
+    }
+
+    evaluation_metrics.append(model_metrics)
+    
+    print(f'Model Metrics for {type(model).__name__}:')
+    print(f'Accuracy: {accuracy:.2f}')
+    print(f'Precision: {precision:.2f}')
+    print(f'Recall: {recall:.2f}')
+    print(f'F1-Score: {f1:.2f}')
+    print('Confusion Matrix:')
+    print(confusion)
+    print('-' * 40,"\n")
+for model_name, model in models.items():
+    model.fit(X_train, y_train)
+    evaluate_model(model, X_test, y_test)
+# Find the best model based on the highest accuracy
+best_model_name = max(models, key=lambda k: accuracy_score(y_test, models[k].predict(X_test)))
+best_accuracy = accuracy_score(y_test, models[best_model_name].predict(X_test))
+print(f'Best Model: {best_model_name} with Accuracy: {best_accuracy:.2f}')
+metrics_df = pd.DataFrame(evaluation_metrics)
+
+# Display the DataFrame with evaluation metrics
+metrics_df
+best_model = models[best_model_name] 
+model_file_path = 'best_model.pkl'
+with open(model_file_path, 'wb') as model_file:
+    pickle.dump(best_model, model_file)
+import os
+import pickle
+
+model_dir = os.path.join('..', 'models')
+os.makedirs(model_dir, exist_ok=True)
+
+vectorizer_path = os.path.join(model_dir, 'transform.pkl')
+with open(vectorizer_path, 'wb') as f:
+    pickle.dump(vectorizer, f)
+
+best_model_path = os.path.join(model_dir, 'best_model.pkl')
+with open(best_model_path, 'wb') as f:
+    pickle.dump(best_model, f)
+
+print(f"Models saved successfully in {model_dir}")
+
+
+===================
